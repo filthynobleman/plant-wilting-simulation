@@ -1,160 +1,62 @@
-# PositionBasedDynamics
+# Plant Wilting Simulation
+This repository contains the implementation of the simulator for the plant wilting process, as described in...  
 
-<p align=center><img src="https://github.com/InteractiveComputerGraphics/PositionBasedDynamics/workflows/build-linux/badge.svg">&nbsp;&nbsp; <img src="https://github.com/InteractiveComputerGraphics/PositionBasedDynamics/workflows/build-windows/badge.svg">&nbsp;&nbsp; <a href='https://positionbaseddynamics.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/positionbaseddynamics/badge/?version=latest' alt='Documentation Status' /></a></p>
-
-This library supports the physically-based simulation of mechanical effects. In the last years position-based simulation methods have become popular in the graphics community. In contrast to classical simulation approaches these methods compute the position changes in each simulation step directly, based on the solution of a quasi-static problem. Therefore, position-based approaches are fast, stable and controllable which make them well-suited for use in interactive environments. However, these methods are generally not as accurate as force-based methods but still provide visual plausibility. Hence, the main application areas of position-based simulation are virtual reality, computer games and special effects in movies and commercials.
-
-The PositionBasedDynamics library allows the position-based handling of many types of constraints in a physically-based simulation. The library uses [CMake](http://www.cmake.org/), [Eigen](http://eigen.tuxfamily.org/), [json](https://github.com/nlohmann/json/), [pybind](https://github.com/pybind/pybind11), [glfw](https://www.glfw.org/), [hapPLY](https://github.com/nmwsharp/happly) and [imgui](https://github.com/ocornut/imgui) (only for the demos). All external dependencies are included. 
-
-Furthermore we use our own library:
-- [Discregrid](https://github.com/InteractiveComputerGraphics/Discregrid/) to generate cubic signed distance fields for the collision detection
+The repository is a modification of the [Position Based Dynamics solver](https://github.com/InteractiveComputerGraphics/PositionBasedDynamics),
+and contains as external dependency the [water diffusion model](https://github.com/filthynobleman/plant-water-diffusion), as described in the
+publication.
 
 
-**Author**: [Jan Bender](http://www.interactive-graphics.de), **License**: MIT
-
-## News
-
-* We added a Python interface: [pyPBD](https://pypi.org/project/pyPBD/)
-* Our new [paper](https://animation.rwth-aachen.de/publication/0557/) about a Direct Position-Based Solver for Stiff Rods uses the PositionBasedDynamics library. You can watch the video  [here](https://www.youtube.com/watch?v=EFH9xt4omls).
-* PBD now has a collision detection based on cubic signed distance fields
-* SPlisHSPlasH is our new open-source fluid simulator which uses the PositionBasedDynamics library to handle rigid-fluid coupling. It can be downloaded here:
-[https://github.com/InteractiveComputerGraphics/SPlisHSPlasH](https://github.com/InteractiveComputerGraphics/SPlisHSPlasH)
-* Our new [paper](http://interactive-graphics.de/index.php/research/98-hierarchical-hp-adaptive-signed-distance-fields) about adaptive signed distance fields uses the PositionBasedDynamics library. You can watch the video  [here](https://www.youtube.com/watch?v=x_Iq2yM4FcA).
-
-## Documentation
-
-The documentation can be found here: 
-
-* [Documentation](https://positionbaseddynamics.readthedocs.io)
-
-## Forum
-
-On our [GitHub discussions](https://github.com/InteractiveComputerGraphics/PositionBasedDynamics/discussions) page you can ask questions, discuss about simulation topics, and share ideas.
-
-## Build Instructions
-
-This project is based on [CMake](https://cmake.org/). Simply generate project, Makefiles, etc. using [CMake](https://cmake.org/) and compile the project with the compiler of your choice. The code was tested with the following configurations:
-- Windows 10 64-bit, CMake 3.9.5, Visual Studio 2019
-- Debian 9 64-bit, CMake 3.12.3, GCC 6.3.0.
-
-Note: Please use a 64-bit target on a 64-bit operating system. 32-bit builds on a 64-bit OS are not supported.
-
-## Python Installation Instruction
-
-For Windows and Linux targets there exists prebuilt python wheel files which can be installed using
-
+## Building Instructions
+The building process is entirely based on Git and CMake.  
+The water diffusion model must be build on its own:
+```sh
+	cd extern/pwd/repo
+	mkdir build
+	cd build
+	cmake .. -DBUILD_SAMPLES=OFF -DCMAKE_INSTALL_PREFIX="../.."
+	cmake --build . --config release -j
+	cmake --install .
 ```
-pip install pypbd
+This will produce the water diffusion library and will install it in the directory `extern/pwd/`.  
+
+After that, the application can be built safely from the project root directory:
+```sh
+	mkdir build
+	cd build
+	cmake ..
+	cmake --build . --config release
 ```
-
-These are available for different Python Versions. See also here: [pyPBD](https://pypi.org/project/pyPBD/).
-If you do not meet these conditions please refer to the build instructions and to the python binding 
-[Getting started guide](https://positionbaseddynamics.readthedocs.io/en/latest/py_getting_started.html).
-
-## Latest Important Changes
-
-* GUI is now based on [imgui](https://github.com/ocornut/imgui)
-* added support of PLY files
-* added Python binding
-* added some XPBD constraints
-* added OBJ export
-* added substepping
-* added DamperJoint
-* improved implementation of slider and hinge joints/motors
-* Crispin Deul added the implementation of his paper Deul, Kugelstadt, Weiler, Bender, "Direct Position-Based Solver for Stiff Rods", Computer Graphics Forum 2018 and a corresponding demo
-* added collision detection for arbitrary meshes based on cubic signed distance fields
-* added implementation of the paper Kugelstadt, Schoemer, "Position and Orientation Based Cosserat Rods", SCA 2016
-* removed Boost dependency
-* added SceneGenerator.py to generate new scenarios easily by simple Python scripting
-* added scene loader based on json 
-* added collision detection based on distance functions
-* added collision handling for rigid and deformable bodies
-* high resolution visualization mesh can be attached to a deformable body
-* added support for Mac OS X
-* added automatic computation of inertia tensor for arbitrary triangle meshes
-* added OBJ file loader
-* parallelized unified solver using graph coloring
-* implemented unified solver for rigid bodies and deformable solids 
+This will produce an executable `PlantDemo` inside the directory `bin`.
 
 
-
-## Features
-
-* Physically-based simulation with (eXtended) position-based constraint handling.
-* Simple interface
-* Demos 
-* Library is free even for commercial applications.
-* Collision detection based on cubic signed distance fields
-* Library supports many constraints: 
-	- Elastic rods:
-		- bend-twist constraint
-		- stretch-shear constraint
-		- Cosserat constraint
-	- Deformable solids:		
-		- point-point distance constraint (PBD & XPBD)
-		- point-edge distance constraint
-		- point-triangle distance constraint
-		- edge-edge distance constraint
-		- dihedral bending constraint
-		- isometric bending constraint (PBD & XPBD)
-		- volume constraint (PBD & XPBD)
-		- shape matching
-		- FEM-based PBD (2D & 3D)
-		- strain-based dynamics (2D & 3D)
-	- Fluids:
-		- position-based fluids 
-	- Rigid bodies:
-		- contact constraints
-		- ball joint
-		- ball-on-line-joint
-		- hinge joint
-		- target angle motor hinge joint
-		- target velocity motor hinge joint
-		- universal joint
-		- slider joint
-		- target position motor slider joint
-		- target velocity motor slider joint
-		- ball joint between rigid body and particle
-		- distance joint
-		- damper joint
-		- implicit spring
-	- Generic constraints
-
-## Videos
-
-The following videos were generated using the PositionBasedDynamics library:
-
-*Hierarchical hp-Adaptive Signed Distance Fields* | *Direct Position-Based Solver for Stiff Rods*
-:---:|:---:
-[![Video](https://img.youtube.com/vi/x_Iq2yM4FcA/0.jpg)](https://www.youtube.com/watch?v=x_Iq2yM4FcA) | [![Video](https://img.youtube.com/vi/EFH9xt4omls/0.jpg)](https://www.youtube.com/watch?v=EFH9xt4omls)
+## Running Instructions
+The executable `PlantDemo` can be run without arguments, which will make it load the default plant.  
+It is possible to specify the plant as the unique extra argument:
+```sh
+	PlantDemo /path/to/plant.txt
+```
+Some test plant files can be found in the directory `bin/resources/plants/`.
 
 
-## Screenshots
-
-|![](https://raw.githubusercontent.com/InteractiveComputerGraphics/PositionBasedDynamics/master/doc/images/PBD1.jpg)|![](https://raw.githubusercontent.com/InteractiveComputerGraphics/PositionBasedDynamics/master/doc/images/PBD2.jpg)|
-|--|--|
-
-## References
-
-* J. Bender, M. Müller and M. Macklin, "Position-Based Simulation Methods in Computer Graphics", In Tutorial Proceedings of Eurographics, 2015
-* J. Bender, D. Koschier, P. Charrier and D. Weber, ""Position-based simulation of continuous materials", Computers & Graphics 44, 2014
-* J. Bender, M. Müller, M. A. Otaduy, M. Teschner and M. Macklin, "A Survey on Position-Based Simulation Methods in Computer Graphics", Computer Graphics Forum 33, 6, 2014
-* C. Deul, T. Kugelstadt, M. Weiler, J. Bender, "Direct Position-Based Solver for Stiff Rods", Computer Graphics Forum, 2018
-* C. Deul, P. Charrier and J. Bender, "Position-Based Rigid Body Dynamics", Computer Animation and Virtual Worlds, 2014
-* D. Koschier, C. Deul, M. Brand and J. Bender, "An hp-Adaptive Discretization Algorithm for Signed Distance Field Generation", IEEE Transactions on Visualization and Computer Graphics 23, 2017
-* M. Macklin, M. Müller, N. Chentanez and T.Y. Kim, "Unified particle physics for real-time applications", ACM Trans. Graph. 33, 4, 2014
-* M. Müller, N. Chentanez, T.Y. Kim, M. Macklin, "Strain based dynamics", In Proceedings of the 2014 ACM
-SIGGRAPH/Eurographics Symposium on Computer Animation, 2014
-* J. Bender, D. Weber and R. Diziol, "Fast and stable cloth simulation based on multi-resolution shape matching", Computers & Graphics 37, 8, 2013
-* R. Diziol, J. Bender and D. Bayer, "Robust Real-Time Deformation of Incompressible Surface Meshes", In Proceedings of ACM SIGGRAPH / EUROGRAPHICS Symposium on Computer Animation (SCA), 2011
-* M. Müller and N. Chentanez, "Solid simulation with oriented particles", ACM Trans. Graph. 30, 4, 2011
-* M. Müller, "Hierarchical Position Based Dynamics", In VRIPHYS 08: Fifth Workshop in Virtual Reality Interactions and Physical Simulations, 2008 
-* M. Müller, B. Heidelberger, M. Hennix and J. Ratcliff, "Position based dynamics", Journal of Visual Communication and Image Representation 18, 2, 2007
-* M. Müller, B. Heidelberger, M. Teschner and M. Gross, "Meshless deformations based on shape matching", ACM Trans. Graph. 24, 3, 2005
-* M. Macklin and M. Müller, "Position based fluids", ACM Trans. Graph. 32, 4, 2013
-* Dan Koschier, Crispin Deul and Jan Bender, "Hierarchical hp-Adaptive Signed Distance Fields", In Proceedings of ACM SIGGRAPH / EUROGRAPHICS Symposium on Computer Animation (SCA), 2016
-* Tassilo Kugelstadt, Elmar Schoemer, "Position and Orientation Based Cosserat Rods", In Proceedings of ACM SIGGRAPH / EUROGRAPHICS Symposium on Computer Animation (SCA), 2016
-* M. Macklin, M. Müller and N. Chentanez, "XPBD: Position-based Simulation of Compliant Constrained Dynamics", Proceedings of the 9th International Conference on Motion in Games (MIG), 2016
-
-
-
+## Plant File Format
+Besides the test plants in the directory `bin/resources/plants/`, it is possible to define a custom plant.  
+A file describing a plant is defined according to the following format
+```
+verts num_verts
+id,tail_x,tail_y,tail_z,radius,on_leaf
+...
+edges num_edges
+id1,id2
+...
+```
+The first line specifies the number of vertices `num_verts` after the keyword `verts`. The actual nodes are specified in the
+following `num_verts` lines.  
+In each line, the node ID is specified with `id`. Each node represents a segment of the plant, discretized as a cylinder. The tail
+of the node is specified by the coordinated `tail_x,tail_y,tail_z`, whereas the radius of the cylinder is given by `radius`.  
+Each node is supposed to have its head in the same point as the tail of its parent node. The root node is supposed to have its head
+at the origin `0,0,0`. The root node is determined automatically as the node closer to the origin.  
+The last value in the line is always either `0` or `1`, and determines if the node is part of the venation of a leaf or if its
+part of a branch.  
+The number of edges `num_edges` is specified after the keyword `edges`. If the plant is a unique connected component, then
+`num_edges = num_verts - 1`.  
+Each edge is encoded as a couple of node IDs, separated by a comma.
