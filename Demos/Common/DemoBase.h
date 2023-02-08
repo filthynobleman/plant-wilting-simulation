@@ -47,6 +47,20 @@ namespace PBD
 		Real m_nextFrameTime;
 		unsigned int m_frameCounter;
 
+		// Plant simulation
+		Real m_damping = 0.99;
+		Real m_density = 1;
+		Real m_leafdensity = 2;
+		Real m_massscale = 1e-3;
+		Real m_yngmin = 1;
+		Real m_yngmax = 1e10;
+		Real m_yngsteep = 1e3;
+		Real m_yngmid = 1.5e-2;
+		Real m_lossrate = 6e-3;
+		Real m_water0 = 8;
+		Real m_time = 0.0;
+		Real m_timestep = 1e1;
+
 
 		virtual void initParameters();
 
@@ -95,6 +109,21 @@ namespace PBD
 		static int EXPORT_PLY;
 		static int EXPORT_FPS;
 
+		// Plant simulation
+		static int DAMPING;
+		static int YNGMIN;
+		static int YNGMAX;
+		static int YNGSTEEP;
+		static int YNGMID;
+		static int DENSITY;
+		static int LEAFDENSITY;
+		static int MASSSCALE;
+		static int LOSSRATE;
+		static int WATER0;
+		static int TIME;
+		static int TIMESTEP;
+		
+
 		DemoBase();
 		virtual ~DemoBase();
 
@@ -139,6 +168,23 @@ namespace PBD
 
 		static void loadMesh(const std::string& filename, VertexData& vd, Utilities::IndexedFaceMesh& mesh, const Vector3r& translation = Vector3r::Zero(),
 			const Matrix3r& rotation = Matrix3r::Identity(), const Vector3r& scale = Vector3r::Ones());
+
+
+
+		// plant simulation
+		Real getDampingForce() const { return m_damping; }
+		Real getYoungsMin() const { return m_yngmin; }
+		Real getYoungsMax() const { return m_yngmax; }
+		Real getYoungsSteep() const { return m_yngsteep; }
+		Real getYoungsMidpoint() const { return m_yngmid; }
+		Real getDensity() const { return m_density; }
+		Real getLeafDensity() const { return m_leafdensity; }
+		Real getMassScale() const { return m_massscale; }
+		Real getLossRate() const { return m_lossrate; }
+		Real getInitialWater() const { return m_water0; }
+		Real getTime() const { return m_time; }
+		Real getTimeStep() const { return m_timestep; }
+		void resetWaterModel();
 	};
 }
  

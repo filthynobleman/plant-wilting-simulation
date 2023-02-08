@@ -2,7 +2,7 @@ include(Visualization/CMakeLists.txt)
 
 # search all demos
 set(PBD_DEMOS 
-	BarDemo
+	PlantDemo
 )
 
 if (NOT PBD_LIBS_ONLY)

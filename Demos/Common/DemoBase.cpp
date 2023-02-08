@@ -37,6 +37,18 @@ int DemoBase::RENDER_BVH_TETS = -1;
 int DemoBase::EXPORT_OBJ = -1;
 int DemoBase::EXPORT_PLY = -1;
 int DemoBase::EXPORT_FPS = -1;
+int DemoBase::DAMPING = -1;
+int DemoBase::YNGMIN = -1;
+int DemoBase::YNGMAX = -1;
+int DemoBase::YNGSTEEP = -1;
+int DemoBase::YNGMID = -1;
+int DemoBase::DENSITY = -1;
+int DemoBase::LEAFDENSITY = -1;
+int DemoBase::MASSSCALE = -1;
+int DemoBase::LOSSRATE = -1;
+int DemoBase::WATER0 = -1;
+int DemoBase::TIME = -1;
+int DemoBase::TIMESTEP = -1;
 
  
 DemoBase::DemoBase()
@@ -134,6 +146,61 @@ void DemoBase::initParameters()
 	setGroup(EXPORT_FPS, "Simulation|Export");
 	setDescription(EXPORT_FPS, "Frame rate for export.");
 	static_cast<NumericParameter<int>*>(getParameter(EXPORT_FPS))->setMinValue(0);
+
+
+
+
+
+	DAMPING = createNumericParameter("damping", "Damping force", &m_damping);
+	setGroup(DAMPING, "Plant|Physics");
+	setDescription(DAMPING, "Damping force on velocity update.");
+
+	DENSITY = createNumericParameter("density", "Density (Branches)", &m_density);
+	setGroup(DENSITY, "Plant|Physics");
+	setDescription(DENSITY, "Density of the dry plant.");
+
+	LEAFDENSITY = createNumericParameter("leafdensity", "Density (Leaves)", &m_leafdensity);
+	setGroup(LEAFDENSITY, "Plant|Physics");
+	setDescription(LEAFDENSITY, "Density of the dry leaves.");
+
+	MASSSCALE = createNumericParameter("massscale", "Mass scale", &m_massscale);
+	setGroup(MASSSCALE, "Plant|Physics");
+	setDescription(MASSSCALE, "Mass scaling factor for physical simulation.");
+
+
+	YNGMIN = createNumericParameter("yngmin", "Min Youngs", &m_yngmin);
+	setGroup(YNGMIN, "Plant|Youngs Modulus");
+	setDescription(YNGMIN, "Minimum Youngs modulus of the plant.");
+	
+	YNGMAX = createNumericParameter("yngmax", "Max Youngs", &m_yngmax);
+	setGroup(YNGMAX, "Plant|Youngs Modulus");
+	setDescription(YNGMAX, "Maximum Youngs modulus of the plant.");
+	
+	YNGSTEEP = createNumericParameter("yngsteep", "Steepness", &m_yngsteep);
+	setGroup(YNGSTEEP, "Plant|Youngs Modulus");
+	setDescription(YNGSTEEP, "Steepness in mapping water to Young's modulus.");
+	
+	YNGMID = createNumericParameter("yngmid", "Midpoint", &m_yngmid);
+	setGroup(YNGMID, "Plant|Youngs Modulus");
+	setDescription(YNGMID, "Midpoint in mapping water to Young's modulus.");
+
+
+	WATER0 = createNumericParameter("water0", "Initial water", &m_water0);
+	setGroup(WATER0, "Plant|Water Diffusion");
+	setDescription(WATER0, "Initial amount of water in the plant.");
+	
+	LOSSRATE = createNumericParameter("lossrate", "Loss rate", &m_lossrate);
+	setGroup(LOSSRATE, "Plant|Water Diffusion");
+	setDescription(LOSSRATE, "Loss rate of the plant's leaves.");
+	
+	TIME = createNumericParameter("time", "Time", &m_time);
+	setGroup(TIME, "Plant|Water Diffusion");
+	setDescription(TIME, "Current time in the water diffusion.");
+	
+	TIMESTEP = createNumericParameter("timestep", "Time step", &m_timestep);
+	setGroup(TIMESTEP, "Plant|Water Diffusion");
+	setDescription(TIMESTEP, "Time step of the water diffusion.");
+
 }
 
 void DemoBase::createParameterGUI()
@@ -1233,5 +1300,10 @@ void DemoBase::step()
 {
 	exportOBJ();
 	exportPLY();
+	m_time += m_timestep;
 }
 
+void DemoBase::resetWaterModel()
+{
+	m_time = 0.0;
+}

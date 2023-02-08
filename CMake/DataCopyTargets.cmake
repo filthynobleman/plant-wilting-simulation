@@ -22,6 +22,14 @@ add_custom_target(CopyPBDScenes
 )
 set_target_properties(CopyPBDScenes PROPERTIES FOLDER "Data copy")
 
+add_custom_target(CopyPBDPlants
+	${CMAKE_COMMAND} -E copy_directory
+	${PROJECT_SOURCE_DIR}/data/plants
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/plants
+	COMMENT "Copying PBD plants"
+)
+set_target_properties(CopyPBDPlants PROPERTIES FOLDER "Data copy")
+
 add_custom_target(CopyImguiFonts
 	${CMAKE_COMMAND} -E copy_directory
 	${PROJECT_SOURCE_DIR}/extern/imgui/misc/fonts
