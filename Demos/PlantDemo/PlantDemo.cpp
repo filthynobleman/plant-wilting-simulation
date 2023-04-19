@@ -17,6 +17,8 @@
 #define _USE_MATH_DEFINES
 #include "math.h"
 
+#include <chrono>
+
 
 // Enable memory leak detection
 #if defined(_DEBUG) && !defined(EIGEN_ALIGN)
@@ -34,6 +36,13 @@ void buildModel ();
 void createModel();
 void render ();
 void reset();
+
+void start_timer();
+double stop_timer();
+
+double WModelTime = 0.0;
+double PBDTime = 0.0;
+size_t NFrames = 0;
 
 DemoBase *base;
 
@@ -99,10 +108,16 @@ int main( int argc, char **argv )
 	Utilities::Timing::printAverageTimes();
 	Utilities::Timing::printTimeSums();
 
+	
+	std::cout << "Plant,Nodes,WaterModel,PBD,Frames" << std::endl;
+	std::cout << PlantFile << ',' << Graph->NumNodes() << ',';
+	std::cout << WModelTime / NFrames << ',' << PBDTime / NFrames << ',' << NFrames << std::endl;
+
 	delete Simulation::getCurrent();
 	delete base;
 	delete model;
 	delete Graph;
+
 
 	return 0;
 }
@@ -129,6 +144,7 @@ void timeStep ()
 		return;
 
 	// Simulation code
+	start_timer();
 	SimulationModel *model = Simulation::getCurrent()->getModel();
 	auto& rbvec = model->getRigidBodies();
 	const unsigned int numSteps = base->getValue<unsigned int>(DemoBase::NUM_STEPS_PER_RENDER);
@@ -146,8 +162,13 @@ void timeStep ()
 
 		base->step();
 	}
+	PBDTime += stop_timer();
 
+	start_timer();
 	WaterModel->Evaluate(base->getTime());
+	WModelTime += stop_timer();
+
+	start_timer();
 	for (int i = 0; i < Graph->NumNodes(); ++i)
 	{
 		const pwd::Node* N = Graph->GetNode(i);
@@ -188,6 +209,9 @@ void timeStep ()
 			cc->m_stiffnessCoefficientK = Vector3r(bendingStiffness, torsionStiffness, bendingStiffness);
 		}
 	}
+
+	PBDTime += stop_timer();
+	NFrames++;
 }
 
 void buildModel ()
@@ -285,4 +309,22 @@ void createModel()
 
 
 
+}
+
+
+
+
+std::chrono::system_clock::time_point timer;
+void start_timer()
+{
+	timer = std::chrono::system_clock::now();
+}
+
+double stop_timer()
+{
+	std::chrono::system_clock::time_point tend;
+	tend = std::chrono::system_clock::now();
+	std::chrono::system_clock::duration eta = tend - timer;
+	size_t etaus = std::chrono::duration_cast<std::chrono::microseconds>(eta).count();
+	return etaus * 1.0e-3;
 }

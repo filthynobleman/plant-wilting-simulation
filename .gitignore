@@ -4,3 +4,4 @@ bin/
 extern/pwd-repo/build*
 extern/pwd/
 build*/
+results*/
