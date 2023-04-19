@@ -231,6 +231,7 @@ void createModel()
 		WaterModel = new pwd::WaterModel(Graph, base->getLossRate(), base->getInitialWater());
 	else
 		WaterModel->Initialize(base->getLossRate(), base->getInitialWater());
+	WaterModel->Build();
 
 	string fileName = FileSystem::normalizePath(base->getExePath() + "/resources/models/cylinder_equisize.obj");
 	IndexedFaceMesh mesh;
