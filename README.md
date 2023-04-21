@@ -10,7 +10,7 @@ publication.
 The building process is entirely based on Git and CMake.  
 The water diffusion model must be build on its own:
 ```sh
-	cd extern/pwd/repo
+	cd extern/pwd-repo
 	mkdir build
 	cd build
 	cmake .. -DBUILD_SAMPLES=OFF -DCMAKE_INSTALL_PREFIX="../.."

@@ -39,6 +39,8 @@ void reset();
 
 void start_timer();
 double stop_timer();
+void parse_args(int argc, const char* const argv[]);
+void export_state(std::ofstream& Stream, bool CreateNewFile);
 
 double WModelTime = 0.0;
 double PBDTime = 0.0;
@@ -62,6 +64,11 @@ pwd::WaterModel* WaterModel = nullptr;
 std::vector<int> CNode1;
 std::vector<int> CNode2;
 
+
+std::ofstream Output;
+int CurOutFrame = 0;
+
+
 // main 
 int main( int argc, char **argv )
 {
@@ -71,19 +78,23 @@ int main( int argc, char **argv )
 	base->init(argc, argv, "Plant demo");
 
 	
-	if (argc > 1)
-		PlantFile = argv[1];
-	else
-		PlantFile = FileSystem::normalizePath(base->getExePath() + PlantFile);
-	std::cout << PlantFile << std::endl;
+	parse_args(argc, argv);
+	std::cout << "Loading plant file " << PlantFile << "... ";
 	try
 	{
 		Graph = new pwd::Graph(PlantFile);
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << e.what() << '\n';
+		std::cerr << '\n' << e.what() << '\n';
 	}
+	std::cout << "Done." << std::endl;
+	std::cout << "Water model solution will be computed ";
+	if (base->isExactSolution())
+		std::cout << "exactly.";
+	else
+		std::cout << "approximatedly.";
+	std::cout << std::endl;
 
 	SimulationModel *model = new SimulationModel();
 	model->init();
@@ -108,6 +119,9 @@ int main( int argc, char **argv )
 	Utilities::Timing::printAverageTimes();
 	Utilities::Timing::printTimeSums();
 
+
+	Output << ']';
+	Output.close();
 	
 	std::cout << "Plant,Nodes,WaterModel,PBD,Frames" << std::endl;
 	std::cout << PlantFile << ',' << Graph->NumNodes() << ',';
@@ -212,12 +226,21 @@ void timeStep ()
 
 	PBDTime += stop_timer();
 	NFrames++;
+	CurOutFrame++;
+	if (CurOutFrame >= base->getOutputEvery())
+	{
+		export_state(Output, false);
+		CurOutFrame = 0;
+	}
 }
 
 void buildModel ()
 {
 	createModel();
 	base->resetWaterModel();
+
+	CurOutFrame = 0;
+	export_state(Output, true);
 }
 
 void render ()
@@ -231,7 +254,8 @@ void createModel()
 		WaterModel = new pwd::WaterModel(Graph, base->getLossRate(), base->getInitialWater());
 	else
 		WaterModel->Initialize(base->getLossRate(), base->getInitialWater());
-	WaterModel->Build();
+	if (base->isExactSolution())
+		WaterModel->Build();
 
 	string fileName = FileSystem::normalizePath(base->getExePath() + "/resources/models/cylinder_equisize.obj");
 	IndexedFaceMesh mesh;
@@ -328,4 +352,226 @@ double stop_timer()
 	std::chrono::system_clock::duration eta = tend - timer;
 	size_t etaus = std::chrono::duration_cast<std::chrono::microseconds>(eta).count();
 	return etaus * 1.0e-3;
+}
+
+void parse_args(int argc, const char* const argv[])
+{
+	base->useExactSolution(false);
+	for (int i = 1; i < argc; ++i)
+	{
+		if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--exact") == 0)
+		{
+			base->useExactSolution(true);
+			continue;
+		}
+		PlantFile = std::string(argv[i]);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void export_state(std::ofstream& Stream, bool CreateNewFile)
+{
+	static std::vector<Quaternionr> Rot0;
+	Matrix3r DefaultRot;
+	DefaultRot.row(0) = Vector3r{ 0, -1, 0 };
+	DefaultRot.row(1) = Vector3r{ -1, 0, 0 };
+	DefaultRot.row(2) = Vector3r{ 0, 0, 1 };
+	if (CreateNewFile)
+	{
+		// On file creation, export topology, positions and roll
+		if (Stream.is_open())
+			Stream.close();
+
+		Stream.open("output.wilt", std::ios::out);
+		assert(Stream.is_open());
+		Stream << '[' << '\n';
+
+		Stream << '[' << '\n';
+
+		auto& rbvec = Simulation::getCurrent()->getModel()->getRigidBodies();
+		pwd::Queue<const pwd::Node*> Queue;
+		Queue.Enqueue(Graph->Root());
+		std::vector<int> ParentID;
+		ParentID.resize(Graph->NumNodes());
+		std::vector<bool> Visited;
+		Visited.resize(Graph->NumNodes());
+		std::vector<int> VisitOrder;
+		VisitOrder.resize(Graph->NumNodes());
+		int CurID = 0;
+		while (!Queue.IsEmpty())
+		{
+			const pwd::Node* N = Queue.Dequeue();
+			Visited[Graph->GetNodeID(N)] = true;
+			VisitOrder[Graph->GetNodeID(N)] = CurID;
+			for (int i = 0; i < N->Degree(); ++i)
+			{
+				if (Visited[Graph->GetNodeID(N->GetAdjacent(i))])
+					continue;
+				Queue.Enqueue(N->GetAdjacent(i));
+				ParentID[Graph->GetNodeID(N->GetAdjacent(i))] = Graph->GetNodeID(N);
+			}
+
+			auto& rb = rbvec[Graph->GetNodeID(N)];
+			Quaternionr rot0 = rb->getRotation0();
+			Quaternionr rot = rb->getRotation();
+			Matrix3r rot0m = rot0.toRotationMatrix();
+			Matrix3r rotm  =  rot.toRotationMatrix();
+
+			Vector3r head = N->Head();
+			Vector3r tail = N->Tail();
+			// Convert to blender units
+			head *= 1e-2;
+			tail *= 1e-2;
+			Real len = (tail - head).norm();
+
+			Stream << "{\n";
+
+
+			Stream << "\"id\" : " << CurID << ',' << '\n';
+			
+			if (Graph->GetNodeID(N) != Graph->GetNodeID(Graph->Root()))
+				Stream << "\"parent\" : " << VisitOrder[ParentID[Graph->GetNodeID(N)]] << ',' << '\n';
+			else
+				Stream << "\"parent\" : " << -1 << ',' << '\n';
+			
+			Stream << "\"head_abs\" : ";
+			Stream << '(' << head[0] << ',' << head[1] << ',' << head[2] << ")," << '\n';
+			
+			Stream << "\"tail_abs\" : ";
+			Stream << '(' << tail[0] << ',' << tail[1] << ',' << tail[2] << ")," << '\n';
+
+			Stream << "\"len\" : " << len << ',' << '\n';
+
+			Stream << "\"rot0_abs\" : [";
+			for (int i = 0; i < 3; ++i)
+			{
+				Stream << '[';
+				for (int j = 0; j < 3; ++j)
+				{
+					Stream << rot0m.row(i)[j];
+					if (j < 2) Stream << ',';
+				}
+				Stream << ']';
+				if (i < 2) Stream << ',';
+			}
+			Stream << "]," << '\n';
+
+			Stream << "\"rot_abs\" : [";
+			for (int i = 0; i < 3; ++i)
+			{
+				Stream << '[';
+				for (int j = 0; j < 3; ++j)
+				{
+					Stream << rotm.row(i)[j];
+					if (j < 2) Stream << ',';
+				}
+				Stream << ']';
+				if (i < 2) Stream << ',';
+			}
+			Stream << "]," << '\n';
+
+
+
+			Stream << "}," << '\n';
+
+			CurID++;
+		}
+
+		Stream << "]," << std::endl;
+	}
+
+	Stream << '[' << '\n';
+
+	auto& rbvec = Simulation::getCurrent()->getModel()->getRigidBodies();
+	pwd::Queue<const pwd::Node*> Queue;
+	Queue.Enqueue(Graph->Root());
+	std::vector<bool> Visited;
+	Visited.resize(Graph->NumNodes());
+	int CurID = 0;
+	while (!Queue.IsEmpty())
+	{
+		const pwd::Node* N = Queue.Dequeue();
+		Visited[Graph->GetNodeID(N)] = true;
+		for (int i = 0; i < N->Degree(); ++i)
+		{
+			if (Visited[Graph->GetNodeID(N->GetAdjacent(i))])
+				continue;
+			Queue.Enqueue(N->GetAdjacent(i));
+		}
+
+		auto& rb = rbvec[Graph->GetNodeID(N)];
+		Quaternionr rot0 = rb->getRotation0();
+		Quaternionr rot = rb->getRotation();
+		Matrix3r rot0m = rot0.toRotationMatrix();
+		Matrix3r rotm  =  rot.toRotationMatrix();
+
+
+
+		Stream << "{\n";
+
+		Stream << "\"rot0_abs\" : [";
+		for (int i = 0; i < 3; ++i)
+		{
+			Stream << '[';
+			for (int j = 0; j < 3; ++j)
+			{
+				Stream << rot0m.row(i)[j];
+				if (j < 2) Stream << ',';
+			}
+			Stream << ']';
+			if (i < 2) Stream << ',';
+		}
+		Stream << "]," << '\n';
+
+		Stream << "\"rot_abs\" : [";
+		for (int i = 0; i < 3; ++i)
+		{
+			Stream << '[';
+			for (int j = 0; j < 3; ++j)
+			{
+				Stream << rotm.row(i)[j];
+				if (j < 2) Stream << ',';
+			}
+			Stream << ']';
+			if (i < 2) Stream << ',';
+		}
+		Stream << "]," << '\n';
+
+
+
+		Stream << "}," << '\n';
+	}
+
+	Stream << "]," << std::endl;
 }

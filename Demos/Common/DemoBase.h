@@ -60,6 +60,8 @@ namespace PBD
 		Real m_water0 = 8;
 		Real m_time = 0.0;
 		Real m_timestep = 1e1;
+		bool m_exactsol = false;
+		int m_outevery = 100;
 
 
 		virtual void initParameters();
@@ -122,6 +124,8 @@ namespace PBD
 		static int WATER0;
 		static int TIME;
 		static int TIMESTEP;
+		static int EXACTSOL;
+		static int OUTEVERY;
 		
 
 		DemoBase();
@@ -184,6 +188,9 @@ namespace PBD
 		Real getInitialWater() const { return m_water0; }
 		Real getTime() const { return m_time; }
 		Real getTimeStep() const { return m_timestep; }
+		bool isExactSolution() const { return m_exactsol; }
+		void useExactSolution(bool useExact) { m_exactsol = useExact; }
+		int getOutputEvery() const { return m_outevery; }
 		void resetWaterModel();
 	};
 }

@@ -49,6 +49,8 @@ int DemoBase::LOSSRATE = -1;
 int DemoBase::WATER0 = -1;
 int DemoBase::TIME = -1;
 int DemoBase::TIMESTEP = -1;
+int DemoBase::EXACTSOL = -1;
+int DemoBase::OUTEVERY = -1;
 
  
 DemoBase::DemoBase()
@@ -200,6 +202,14 @@ void DemoBase::initParameters()
 	TIMESTEP = createNumericParameter("timestep", "Time step", &m_timestep);
 	setGroup(TIMESTEP, "Plant|Water Diffusion");
 	setDescription(TIMESTEP, "Time step of the water diffusion.");
+
+	OUTEVERY = createNumericParameter("outevery", "Output frequency", &m_outevery);
+	setGroup(OUTEVERY, "Plant|Water Diffusion");
+	setDescription(OUTEVERY, "Number of simulated frames between output wilting stages.");
+
+	EXACTSOL = createBoolParameter("exactsol", "Use exact solution", &m_exactsol);
+	setGroup(EXACTSOL, "Plant|Water Diffusion");
+	setDescription(EXACTSOL, "Compute the diffusion with the analytic exact solution or via numerical integration.");
 
 }
 
