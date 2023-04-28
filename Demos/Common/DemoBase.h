@@ -62,6 +62,8 @@ namespace PBD
 		Real m_timestep = 1e1;
 		bool m_exactsol = false;
 		int m_outevery = 100;
+		int m_sframes = 0;
+		int m_wframes = 0;
 
 
 		virtual void initParameters();
@@ -126,6 +128,7 @@ namespace PBD
 		static int TIMESTEP;
 		static int EXACTSOL;
 		static int OUTEVERY;
+		static int WFRAMES;
 		
 
 		DemoBase();

@@ -43,6 +43,7 @@ void parse_args(int argc, const char* const argv[]);
 void export_state(std::ofstream& Stream, bool CreateNewFile);
 
 double WModelTime = 0.0;
+double WMapTime = 0.0;
 double PBDTime = 0.0;
 size_t NFrames = 0;
 
@@ -58,7 +59,7 @@ const Real density = 7800.;
 const Real bunnyDensity = 500.;
 
 
-std::string PlantFile = "/resources/plants/plant000.txt";
+std::string PlantFile = "resources/plants/plant000.txt";
 pwd::Graph* Graph = nullptr;
 pwd::WaterModel* WaterModel = nullptr;
 std::vector<int> CNode1;
@@ -77,7 +78,8 @@ int main( int argc, char **argv )
 	base = new DemoBase();
 	base->init(argc, argv, "Plant demo");
 
-	
+
+	PlantFile = base->getExePath() + PlantFile;
 	parse_args(argc, argv);
 	std::cout << "Loading plant file " << PlantFile << "... ";
 	try
@@ -123,9 +125,9 @@ int main( int argc, char **argv )
 	Output << ']';
 	Output.close();
 	
-	std::cout << "Plant,Nodes,WaterModel,PBD,Frames" << std::endl;
+	std::cout << "Plant,Nodes,WaterModel,StiffMap,PBD,Frames" << std::endl;
 	std::cout << PlantFile << ',' << Graph->NumNodes() << ',';
-	std::cout << WModelTime / NFrames << ',' << PBDTime / NFrames << ',' << NFrames << std::endl;
+	std::cout << WModelTime / NFrames << ',' << WMapTime / NFrames << ',' << PBDTime / NFrames << ',' << NFrames << std::endl;
 
 	delete Simulation::getCurrent();
 	delete base;
@@ -223,8 +225,8 @@ void timeStep ()
 			cc->m_stiffnessCoefficientK = Vector3r(bendingStiffness, torsionStiffness, bendingStiffness);
 		}
 	}
+	WMapTime += stop_timer();
 
-	PBDTime += stop_timer();
 	NFrames++;
 	CurOutFrame++;
 	if (CurOutFrame >= base->getOutputEvery())

@@ -51,6 +51,7 @@ int DemoBase::TIME = -1;
 int DemoBase::TIMESTEP = -1;
 int DemoBase::EXACTSOL = -1;
 int DemoBase::OUTEVERY = -1;
+int DemoBase::WFRAMES = -1;
 
  
 DemoBase::DemoBase()
@@ -211,6 +212,10 @@ void DemoBase::initParameters()
 	setGroup(EXACTSOL, "Plant|Water Diffusion");
 	setDescription(EXACTSOL, "Compute the diffusion with the analytic exact solution or via numerical integration.");
 
+	WFRAMES = createNumericParameter("wframes", "Water Frame Counter", &m_wframes);
+	setGroup(WFRAMES, "Plant|Statistics");
+	setDescription(WFRAMES, "Number of frames spent in the simulation.");
+	setReadOnly(WFRAMES, true);
 }
 
 void DemoBase::createParameterGUI()
@@ -1310,10 +1315,13 @@ void DemoBase::step()
 {
 	exportOBJ();
 	exportPLY();
-	m_time += m_timestep;
+	m_time += m_timestep / getValue<unsigned int>(NUM_STEPS_PER_RENDER);
+	m_sframes++;
+	m_wframes = m_sframes / getValue<unsigned int>(NUM_STEPS_PER_RENDER);
 }
 
 void DemoBase::resetWaterModel()
 {
+	m_sframes = 0;
 	m_time = 0.0;
 }
