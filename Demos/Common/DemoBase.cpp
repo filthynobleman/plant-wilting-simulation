@@ -45,6 +45,7 @@ int DemoBase::YNGMID = -1;
 int DemoBase::DENSITY = -1;
 int DemoBase::LEAFDENSITY = -1;
 int DemoBase::MASSSCALE = -1;
+int DemoBase::LATCHES = -1;
 int DemoBase::LOSSRATE = -1;
 int DemoBase::WATER0 = -1;
 int DemoBase::TIME = -1;
@@ -169,6 +170,10 @@ void DemoBase::initParameters()
 	MASSSCALE = createNumericParameter("massscale", "Mass scale", &m_massscale);
 	setGroup(MASSSCALE, "Plant|Physics");
 	setDescription(MASSSCALE, "Mass scaling factor for physical simulation.");
+
+	LATCHES = createBoolParameter("uselatches", "Has latches", &m_uselatches);
+	setGroup(LATCHES, "Plant|Physics");
+	setDescription(LATCHES, "Simulate latches keeping in place some parts of the plant specified in the input file.");
 
 
 	YNGMIN = createNumericParameter("yngmin", "Min Youngs", &m_yngmin);

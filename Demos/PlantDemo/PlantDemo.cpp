@@ -194,6 +194,7 @@ void timeStep ()
 	WModelTime += stop_timer();
 
 	start_timer();
+	bool UseLatches = base->useLatches();
 	for (int i = 0; i < Graph->NumNodes(); ++i)
 	{
 		const pwd::Node* N = Graph->GetNode(i);
@@ -204,7 +205,7 @@ void timeStep ()
 			Mass *= base->getDensity();
 		Mass += WaterModel->Water(i);
 		Mass *= base->getMassScale();
-		if (N == Graph->Root() || Latches[Graph->GetNodeID(N)])
+		if (N == Graph->Root() || (UseLatches && Latches[Graph->GetNodeID(N)]))
 			rbvec[i]->setMass(0.0);
 		else
 			rbvec[i]->setMass(Mass);
@@ -604,14 +605,28 @@ void parse_latches()
 
 	Latches.reserve(Graph->NumNodes());
 	std::string Line;
+	// Ignore first header line
+	std::getline(Stream, Line);
 	while (!Stream.eof())
 	{
 		std::getline(Stream, Line);
+		// Count number of commas. If line does not contain latches option, set it to false
+		int NCommas = 0;
+		int Idx = 0;
+		while ((Idx = Line.find(',', Idx)) != std::string::npos)
+		{
+			NCommas += 1;
+			Idx += 1;
+		}
+		if (NCommas < 6)
+		{
+			Latches.push_back(false);
+			continue;
+		}
 		Line = Line.substr(Line.rfind(',') + 1);
 		int HasLatch;
 		std::sscanf(Line.c_str(), "%d", &HasLatch);
-		// Latches.push_back(HasLatch != 0);
-		Latches.push_back(0);
+		Latches.push_back(HasLatch != 0);
 	}
 
 
