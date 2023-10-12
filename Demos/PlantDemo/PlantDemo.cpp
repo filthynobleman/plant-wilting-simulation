@@ -610,6 +610,9 @@ void parse_latches()
 	while (!Stream.eof())
 	{
 		std::getline(Stream, Line);
+		// We don't want to read edges
+		if (Line.find("edges") == 0)
+			break;
 		// Count number of commas. If line does not contain latches option, set it to false
 		int NCommas = 0;
 		int Idx = 0;
@@ -617,16 +620,27 @@ void parse_latches()
 		{
 			NCommas += 1;
 			Idx += 1;
+			if (NCommas == 6)
+			{
+				int NextIdx = Line.find(',', Idx);
+				if (NextIdx == std::string::npos)
+					Line = Line.substr(Idx);
+				else
+					Line = Line.substr(Idx, NextIdx - Idx);
+				int HasLatch;
+				std::sscanf(Line.c_str(), "%d", &HasLatch);
+				Latches.push_back(HasLatch != 0);
+			}
 		}
 		if (NCommas < 6)
 		{
 			Latches.push_back(false);
 			continue;
 		}
-		Line = Line.substr(Line.rfind(',') + 1);
-		int HasLatch;
-		std::sscanf(Line.c_str(), "%d", &HasLatch);
-		Latches.push_back(HasLatch != 0);
+		// Line = Line.substr(Line.rfind(',') + 1);
+		// int HasLatch;
+		// std::sscanf(Line.c_str(), "%d", &HasLatch);
+		// Latches.push_back(HasLatch != 0);
 	}
 
 

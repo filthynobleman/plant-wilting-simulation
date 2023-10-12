@@ -43,7 +43,7 @@ Besides the test plants in the directory `bin/resources/plants/`, it is possible
 A file describing a plant is defined according to the following format
 ```
 verts num_verts
-id,tail_x,tail_y,tail_z,radius,on_leaf
+id,tail_x,tail_y,tail_z,radius,on_leaf[,is_fixed]
 ...
 edges num_edges
 id1,id2
@@ -55,8 +55,10 @@ In each line, the node ID is specified with `id`. Each node represents a segment
 of the node is specified by the coordinated `tail_x,tail_y,tail_z`, whereas the radius of the cylinder is given by `radius`.  
 Each node is supposed to have its head in the same point as the tail of its parent node. The root node is supposed to have its head
 at the origin `0,0,0`. The root node is determined automatically as the node closer to the origin.  
-The last value in the line is always either `0` or `1`, and determines if the node is part of the venation of a leaf or if its
+The `on_leaf` value is always either `0` or `1`, and determines if the node is part of the venation of a leaf or if its
 part of a branch.  
+The valua `is_fixed` is always either `0` or `1` and it's optional (by default, `0`). It determines if that node is kept in place 
+by external supports, and this feature of the simulation can be enabled and disabled at runtime.  
 The number of edges `num_edges` is specified after the keyword `edges`. If the plant is a unique connected component, then
 `num_edges = num_verts - 1`.  
 Each edge is encoded as a couple of node IDs, separated by a comma.
