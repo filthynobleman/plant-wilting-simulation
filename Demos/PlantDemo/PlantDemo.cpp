@@ -41,6 +41,7 @@ void start_timer();
 double stop_timer();
 void parse_args(int argc, const char* const argv[]);
 void export_state(std::ofstream& Stream, bool CreateNewFile);
+void parse_latches();
 
 double WModelTime = 0.0;
 double WMapTime = 0.0;
@@ -64,9 +65,11 @@ pwd::Graph* Graph = nullptr;
 pwd::WaterModel* WaterModel = nullptr;
 std::vector<int> CNode1;
 std::vector<int> CNode2;
+std::vector<bool> Latches;
 
 
 std::ofstream Output;
+std::ofstream OutWater;
 int CurOutFrame = 0;
 
 
@@ -79,12 +82,13 @@ int main( int argc, char **argv )
 	base->init(argc, argv, "Plant demo");
 
 
-	PlantFile = base->getExePath() + PlantFile;
+	PlantFile = base->getExePath() + '/' + PlantFile;
 	parse_args(argc, argv);
 	std::cout << "Loading plant file " << PlantFile << "... ";
 	try
 	{
 		Graph = new pwd::Graph(PlantFile);
+		parse_latches();
 	}
 	catch(const std::exception& e)
 	{
@@ -108,6 +112,9 @@ int main( int argc, char **argv )
 	Simulation::getCurrent()->setVecValue<Real>(grav_id, gravity.data());
 	buildModel();
 
+	OutWater.open("outwater.txt", std::ios::out);
+	OutWater << "Time,Water\n";
+
 	base->createParameterGUI();
 
 	// OpenGL
@@ -124,6 +131,8 @@ int main( int argc, char **argv )
 
 	Output << ']';
 	Output.close();
+
+	OutWater.close();
 	
 	std::cout << "Plant,Nodes,WaterModel,StiffMap,PBD,Frames" << std::endl;
 	std::cout << PlantFile << ',' << Graph->NumNodes() << ',';
@@ -195,7 +204,7 @@ void timeStep ()
 			Mass *= base->getDensity();
 		Mass += WaterModel->Water(i);
 		Mass *= base->getMassScale();
-		if (N == Graph->Root())
+		if (N == Graph->Root() || Latches[Graph->GetNodeID(N)])
 			rbvec[i]->setMass(0.0);
 		else
 			rbvec[i]->setMass(Mass);
@@ -232,6 +241,7 @@ void timeStep ()
 	if (CurOutFrame >= base->getOutputEvery())
 	{
 		export_state(Output, false);
+		OutWater << base->getTime() << ',' << WaterModel->Water().sum() << '\n';
 		CurOutFrame = 0;
 	}
 }
@@ -243,6 +253,7 @@ void buildModel ()
 
 	CurOutFrame = 0;
 	export_state(Output, true);
+	OutWater << base->getTime() << ',' << WaterModel->Water().sum() << '\n';
 }
 
 void render ()
@@ -576,4 +587,34 @@ void export_state(std::ofstream& Stream, bool CreateNewFile)
 	}
 
 	Stream << "]," << std::endl;
+}
+
+
+
+void parse_latches()
+{
+	std::ifstream Stream;
+	Stream.open(PlantFile, std::ios::in);
+	if (!Stream.is_open())
+	{
+		std::stringstream ss;
+		ss << "Cannot open file " << PlantFile << " for reading.";
+		throw std::runtime_error(ss.str());
+	}
+
+	Latches.reserve(Graph->NumNodes());
+	std::string Line;
+	while (!Stream.eof())
+	{
+		std::getline(Stream, Line);
+		Line = Line.substr(Line.rfind(',') + 1);
+		int HasLatch;
+		std::sscanf(Line.c_str(), "%d", &HasLatch);
+		// Latches.push_back(HasLatch != 0);
+		Latches.push_back(0);
+	}
+
+
+
+	Stream.close();
 }
