@@ -1,6 +1,9 @@
 # Plant Wilting Simulation
 This repository contains the implementation of the simulator for the plant wilting process, as described in the paper _A Physically-inspired Approach to the Simulation of Plant Wilting_.  
 
+- DOI: https://dl.acm.org/doi/10.1145/3610548.3618218
+- PDF: http://computationalsciences.org/publications/maggioli-2023-plant-wilting/maggioli-2023-plant-wilting.pdf
+
 The repository is a modification of the [Position Based Dynamics solver](https://github.com/InteractiveComputerGraphics/PositionBasedDynamics),
 and contains as external dependency the [water diffusion model](https://github.com/filthynobleman/plant-water-diffusion), as described in the
 publication.
